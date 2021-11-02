@@ -2,6 +2,7 @@
 # Table of contents
 - Prerequisites
   - [How to connect a Building edge openBOS&reg; device to ABB cloud and get ready to using the open APIs?](#how-to-connect-a-building-edge-openbos-device-to-abb-cloud-and-get-ready-to-using-the-open-apis)
+- Environment
   - [Postman environment](#postman-environment)
   - [Swagger environment](#swagger-environment)
 - Concept
