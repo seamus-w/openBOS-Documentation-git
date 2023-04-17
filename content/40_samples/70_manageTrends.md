@@ -44,7 +44,7 @@ Unique identifier is the trend instance id linked to the datapoint.
 
 ```csharp
     // Read a trend instance values result will be TrendValuesResultDTO
-    var readResponse = client.Execute<dynamic>(new RestRequest($"{baseUrl}/trend/{id}/values?trendPeriodType=RealTime&from=2021-07-05T13%3A48%3A02.933%2B00%3A00&to=2021-07-05T14%3A08%3A02.933%2B00%3A00")).Data;
+    var readResponse = client.Execute<JsonObject>(new RestRequest($"{baseUrl}/trend/{id}/values?trendPeriodType=RealTime&from=2021-07-05T13%3A48%3A02.933%2B00%3A00&to=2021-07-05T14%3A08%3A02.933%2B00%3A00")).Data;
 ```
 
 from / to arguments are DateTime + offset format: <year>-<month>-<day>T<hour>:<minute>:<second>.<msec><timezone>

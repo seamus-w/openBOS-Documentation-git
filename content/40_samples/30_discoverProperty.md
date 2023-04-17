@@ -1,4 +1,4 @@
-# Check property
+# Manage property
 
 ```
 NOTE:
@@ -6,6 +6,11 @@ Sample are written in C# and uses nuget package RestSharp for convenience.
 baseUrl for local access : http://<ipaddress>
 baseUrl for cloud access : `https://api.electrification.ability.abb/buildings/openbos/apiproxy/v1/gateway/<edgeid>`
 ```
+
+## Postman link
+
+You can find other samples in the Postman collection
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/14996509-f2ab8b96-9c38-4825-ab6f-7022e954deda?action=collection%2Ffork&collection-url=entityId%3D14996509-f2ab8b96-9c38-4825-ab6f-7022e954deda%26entityType%3Dcollection%26workspaceId%3Dea90c3d1-21af-4177-8e72-f21b5ed12326)
 
 ## How to get information on the property?
 
@@ -20,7 +25,7 @@ It returns the detailed information of the property (PropertyDTO).
     client.AddDefaultHeader("Authorization", $"Bearer {bearerToken}");
 
     // Read detail information on the property
-    var resp = client.Execute<dynamic>(new RestRequest($"{baseUrl}/api/v1/ontology/property")); // Result object is PropertyDTO
+    var resp = client.Execute<JsonObject>(new RestRequest($"{baseUrl}/api/v1/ontology/property")); // Result object is PropertyDTO
 
     Console.WriteLine("address1 :" + resp.Data["address1"]?.ToString());
     Console.WriteLine("address2 :" + resp.Data["address2"]?.ToString());
@@ -62,14 +67,14 @@ It returns the detailed information of the property. From that result use the fi
     var client = new RestSharp.RestClient();
     client.AddDefaultHeader("Authorization", $"Bearer {bearerToken}");
 
-    var resp = client.Execute<dynamic>(new RestRequest($"{baseUrl}/api/v1/ontology/property"));
+    var property = client.Execute<JsonObject>(new RestRequest($"{baseUrl}/api/v1/ontology/property")).Data;
     Console.WriteLine("Reading list of building inside the property");
-    var buildings = client.Execute<dynamic>(new RestRequest($"{baseUrl}/{response.Data["buildings"]}")); // ZoneInstanceInfoDTO[]
-    Console.WriteLine($"Buildings count : {buildings.Data.Count}");
-    foreach (dynamic item in buildings.Data)
+    var buildings = client.Execute<List<JsonObject>>(new RestRequest($"{baseUrl}/{property["buildings"]}")).Data; // ZoneInstanceInfoDTO[]
+    Console.WriteLine($"Buildings count : {buildings.Count}");
+    foreach (JsonObject item in buildings)
     {
         Console.WriteLine(item["name"]);
-        var building = client.Execute<dynamic>(new RestRequest($"{baseUrl}/api/v1/ontology/building/{item["id"]}")).Data; // BuildingDTO
+        var building = client.Execute<JsonObject>(new RestRequest($"{baseUrl}/api/v1/ontology/building/{item["id"]}")).Data; // BuildingDTO
     }
 ```
 
@@ -85,19 +90,18 @@ Using  API endpoints of the ontology, the concept is to request all structures t
     var client = new RestSharp.RestClient();
     client.AddDefaultHeader("Authorization", $"Bearer {bearerToken}");
     // ...
-    dynamic building = client.Execute<dynamic>(new RestRequest($"{baseUrl}/api/v1/ontology/building/{mybuildingid}")).Data; // BuildingDTO
+    dynamic buildingResp = client.Execute(new RestRequest($"{baseUrl}/api/v1/ontology/building/{mybuildingid}")); // BuildingDTO
+    dynamic building = JObject.Parse(buildingResp.Content!);
 
     // Use sub-property building["structures"] as a next route to query for subfaçades
-    var structuresResponse = client.Execute<dynamic>(new RestRequest($"{baseUrl}/{building["structures"]}")); // ZoneInstanceInfoDTO[]
+    var structuresResponse = client.Execute(new RestRequest($"{baseUrl}/{building["structures"]}")); // ZoneInstanceInfoDTO[]
+    var structures = JsonConvert.DeserializeObject<List<dynamic>>(structuresResponse.Content!);
 
-    Console.WriteLine($"Structures count : {structuresResponse.Data?.Count}");
-    if (structuresResponse.Data != null)
+    if (structures != null)
     {
-        IEnumerable<dynamic> structures = structuresResponse.Data;
-
-        Console.WriteLine($"Facades count : {structures.Where(onestructure => onestructure["tags"].Contains("bos:structure:facade")).Count()}");
-        Console.WriteLine($"Floors count : {structures.Where(onestructure => onestructure["tags"].Contains("bos:structure:floor")).Count()}");
-        Console.WriteLine($"Roofs count : {structures.Where(onestructure => onestructure["tags"].Contains("bos:structure:roof")).Count()}");
+        Console.WriteLine($"Facades count : {structures.Where(onestructure => (onestructure["tags"]).ToObject<List<string>>().Contains("bos:structure:facade")).Count()}");
+        Console.WriteLine($"Floors count : {structures.Where(onestructure => (onestructure["tags"]).ToObject<List<string>>().Contains("bos:structure:floor")).Count()}");
+        Console.WriteLine($"Roofs count : {structures.Where(onestructure => (onestructure["tags"]).ToObject<List<string>>().Contains("bos:structure:roof")).Count()}");
     }
 ```
 
@@ -139,21 +143,22 @@ Then query for the structure type "fa&ccedil;ade", "floor", "roof".
     // Set Authentication token
     var client = new RestSharp.RestClient();
     client.AddDefaultHeader("Authorization", $"Bearer {bearerToken}");
-    // Get detail of Building
-    dynamic building = client.Execute<dynamic>(new RestRequest($"{baseUrl}/api/v1/ontology/building/{mybuildingid}")).Data; // BuildingDTO
-
-    // Use parameter "structures" from BuildingDTO to make next call having the structures of the building
-    IEnumerable<dynamic> structures = (IEnumerable<dynamic>)client.Execute<dynamic>(new RestRequest($"{baseUrl}/{building["structures"]}")).Data;
-
-    // filter on floors only
-    dynamic floors = structures.Where(onestructure => onestructure["tags"].Contains("bos:structure:floor"));
-    foreach(dynamic floor in floors)
     {
-      var floorDetail = client.Execute<dynamic>(new RestRequest($"{baseUrl}/api/v1/ontology/structure/{floor["id"]}")).Data; // StructureDTO
+        // Get detail of Building
+        dynamic building = client.Execute<JsonObject>(new RestRequest($"{baseUrl}/api/v1/ontology/building/{mybuildingid}")).Data; // BuildingDTO
 
-      // Use parameter "spaceChildren" from BuildingDTO to make next call having the structures of the building
-      var spaces = client.Execute<dynamic>(new RestRequest($"{baseUrl}/{floorDetail["spaceChildren"]}")).Data;
-      Console.WriteLine($"Spaces count : {spaces?.Count}");
+        // Use parameter "structures" from BuildingDTO to make next call having the structures of the building
+        var structures = client.Execute<List<JsonObject>>(new RestRequest($"{baseUrl}/{building["structures"]}")).Data;
+        // filter on floors only
+        dynamic floors = structures.Where(onestructure => (onestructure["tags"].AsArray()).Select(a=>(string)a).ToList().Contains("bos:structure:floor"));
+        foreach (dynamic floor in floors)
+        {
+            var floorDetail = client.Execute<JsonObject>(new RestRequest($"{baseUrl}/api/v1/ontology/structure/{floor["id"]}")).Data; // StructureDTO
+
+            // Use parameter "spaceChildren" from BuildingDTO to make next call having the structures of the building
+            var spaces = client.Execute<JsonArray>(new RestRequest($"{baseUrl}/{floorDetail["spaceChildren"]}")).Data;
+            Console.WriteLine($"Spaces count : {spaces?.Count}");
+        }
     }
 ```
 
@@ -163,14 +168,15 @@ Using the core routes the concept is to get all floors below a specific building
     var client = new RestSharp.RestClient();
     client.AddDefaultHeader("Authorization", $"Bearer {bearerToken}");
     // Get building zone
-    dynamic building = client.Execute<dynamic>(new RestRequest($"{baseUrl}/api/v1/ontology/zone/{mybuildingid}")).Data; // ZoneDTO
-    // Find floors that are under the building using tag bos:structure:floor
-    dynamic floors = client.Execute<dynamic>(new RestRequest($"{baseUrl}/api/v1/ontology/zone?filter=underzone \"{mybuildingid}\" and Tags contains \"bos:structure:floor\"")).Data; // ZoneInfoDTO[]
-    foreach(dynamic floor in floors)
+    dynamic building = client.Execute<JsonObject>(new RestRequest($"{baseUrl}/api/v1/ontology/zone/{mybuildingid}")).Data; // ZoneDTO
+                                                                                                                        // Find floors that are under the building using tag bos:structure:floor
+    dynamic floors = client.Execute<List<JsonObject>>(new RestRequest($"{baseUrl}/api/v1/ontology/zone?filter=underzone \"{mybuildingid}\" and Tags contains \"bos:structure:floor\"")).Data; // ZoneInfoDTO[]
+    foreach (dynamic floor in floors)
     {
-      // Find space that are under the floor using tag bos:space:
-      var spaces = client.Execute<dynamic>(new RestRequest($"{baseUrl}/api/v1/ontology/zone?filter=underzone \"{floor["id"]}\" and Tags contains \"$space:\"")).Data; // ZoneInfoDTO[]
-      Console.WriteLine($"Spaces count : {spaces?.Count}");
+        string url = $"{baseUrl}/api/v1/ontology/zone?filter=underzone \"{floor["id"]}\" and Tags contains \"space:\"";
+        // Find space that are under the floor using tag bos:space:
+        var spaces = client.Execute<List<JsonObject>>(new RestRequest(url)).Data; // ZoneInfoDTO[]
+        Console.WriteLine($"Spaces count : {spaces?.Count}");
     }
 ```
 
@@ -187,26 +193,32 @@ The BuildTree method will create a tree structure with:
 	}
 
 ```csharp
-  // Method used to generate a tree structure from a list of zones
-  static IEnumerable<dynamic> BuildTree(IEnumerable<dynamic> collection, string root_id = "")
-  {
-      var list = collection.Where(c => (string.IsNullOrEmpty(root_id) && c["parentIds"].Count == 0) || c["parentIds"].Contains(root_id)).ToList();
-      var results = new List<dynamic>();
-      foreach (var c in list)
-      {
-          results.Add(new
-          {
-              Item = c,
-              Children = BuildTree(collection, c["id"])
-          });
-      }
-      return results;
-  }
-  var zones = client.Execute<dynamic>(new RestRequest($"{baseUrl}/api/v1/core/zone/hierarchy")).Data;
+    // Method used to generate a tree structure from a list of zones
+    static IEnumerable<dynamic> BuildTree(IEnumerable<dynamic> collection, string root_id = "")
+    {
+        var list = new List<dynamic>();
 
-  // Resulting tree of element containing { Zone, Children }
-  // the tags in ZoneInfoDTO[] can then be used to categorise the different type of zone
-  var tree = BuildTree(zones);
+        foreach (JsonObject item in collection)
+        {
+            if (string.IsNullOrEmpty(root_id) && item["parentIds"].AsArray().Count == 0) { list.Add(item); continue; }
+            if (item["parentIds"].AsArray().Select(a => (string)a).ToList().Contains(root_id)) { list.Add(item); continue; }
+        }
+        var results = new List<dynamic>();
+        foreach (var c in list)
+        {
+            results.Add(new
+            {
+                Item = c,
+                Children = BuildTree(collection, (string)c["id"])
+            });
+        }
+        return results;
+    }
+    var zones = client.Execute<List<JsonObject>>(new RestRequest($"{baseUrl}/api/v1/core/zone/hierarchy")).Data;
+
+    // Resulting tree of element containing { Zone, Children }
+    // the tags in ZoneInfoDTO[] can then be used to categorise the different type of zone
+    var tree = BuildTree(zones);
 ```
 
 ### How do I get the graphical representation of a floor?
@@ -218,8 +230,8 @@ This sample reads the graphical representation (mapview) of a floor with its spa
     var client = new RestSharp.RestClient();
     client.AddDefaultHeader("Authorization", $"Bearer {bearerToken}");
     // ...
-    var mapView = client.Execute<dynamic>(new RestRequest($"{baseUrl}/api/v1/ontology/mapview/{myfloorid}")).Data;
-    var mapViewGraphics = client.Execute<dynamic>(new RestRequest($"{baseUrl}/api/v1/ontology/mapview?zoneId={mapView["id"]}")).Data;
+    var mapView = client.Execute<List<JsonObject>>(new RestRequest($"{baseUrl}/api/v1/ontology/mapview?zoneId={mygroundid}")).Data;
+    var mapViewGraphics = client.Execute<List<JsonObject>>(new RestRequest($"{baseUrl}/api/v1/ontology/mapview/{mapView[0]["id"]}/graphics")).Data;
     Console.WriteLine($"Number of graphical items : {mapViewGraphics?.Count}");
 
     // Each graphical item then has the coordinates where it must be displayed
