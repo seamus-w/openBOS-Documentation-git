@@ -7,11 +7,6 @@ baseUrl for local access : http://<ipaddress>
 baseUrl for cloud access : https://api.electrification.ability.abb/buildings/openbos/apiproxy/v1/gateway/<edgeid>
 ```
 
-## Postman link
-
-You can find the sample in a Postman collection
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/14996509-f2ab8b96-9c38-4825-ab6f-7022e954deda?action=collection%2Ffork&collection-url=entityId%3D14996509-f2ab8b96-9c38-4825-ab6f-7022e954deda%26entityType%3Dcollection%26workspaceId%3Dea90c3d1-21af-4177-8e72-f21b5ed12326)
-
 ## The different type of datapoint 
 
 When trying to read/write fieldbus value or trying to create alarm/trend/schedule on fieldbus value you will refer to the identification of datapoint.
@@ -23,42 +18,65 @@ The datapoint identification can be :
 ### Datapoint instance
 The datapoint instance, correspond to a datapoint attached to a space instance or asset instance. It is identified by its unique database identifier.
 
-```csharp
-  identifier = new
+```json
   {
-      id = "my_unique_identifier", // Network from where datapoint will be read
-      type = "datapointinstance" // Indicates the datapoint is entirely described by its protocol argument
+      "id": "my_unique_identifier", // Network from where datapoint will be read
+      "type": "datapointinstance" // Indicates the datapoint is entirely described by its protocol argument
   }
 ```
 
 ### Protocol argument based
-The datapoint from protocol arguments, this is a datapoint entirely described by the protocol arguments of what must be read on the fieldbus.
-The protocol arguments depend of the targetted fieldbus network .
+The datapoint from protocol arguments, this is a datapoint entirely described by the protocol arguments of what must be read on the fieldbus. The protocol arguments depend of the targetted fieldbus network .
 
-```csharp
-  identifier = new
+```json
   {
-      networkId = "{{bacnetNetworkId}}", // Network from where datapoint will be read
-      type = "protocolargumentonly", // Indicates the datapoint is entirely described by its protocol argument
-      protocolArguments = new
-      { // Here an example of BACNet specific protocol arguments
-          deviceid = 1,
-          objecttype = "2",
-          objectinstance = 1,
-          propertyidentifier = "85"
+      "networkId": "{{bacnetNetworkId}}", // Network from where datapoint will be read
+      "type": "protocolargumentonly", // Indicates the datapoint is entirely described by its protocol argument
+      "protocolArguments":
+      { 
+          // Fieldbus specific protocol arguments
       }
   }
 ```
 
+Protocol arguments for BACNet property are:
+```json
+  {
+    "deviceid": 1,                // BACNet device instance
+    "objecttype": "analog-value", // BACNet object type
+    "objectinstance": 1,          // BACNet object instance
+    "propertyidentifier": "present-value"// BACNet property identifier
+  }
+```
+
+Protocol arguments for ModBus property are:
+```json
+{
+  "deviceaddress":"192.68.1.1", // ModBus IP address
+  "deviceport":502,             // Ip port
+  "deviceslave":0,              // Slave Id
+  "protocol":"TCP",             // TCP/UDP
+  "datapointaddress":11,        // Register or Coil address
+  "datapointtype":"coil",       // coil, discrete, inputRegister, holdingRegister
+  "valueformat":"bit"           // 
+}
+```
+
+|Datapoint Type| Value format|
+|-|-|
+|coil, discrete| bit|
+|inputRegister, holdingRegister| int16, int16rev, uint16, uint16rev, int32, int32sb, int32rev, int32revsb, uint32, uint32sb, uint32rev, uint32revsb, float32, float32sb, float32rev, float32revsb, float64, float64rev, string, stringrev, int64, int64rev, uint64, uint64rev|
+|
+
+
 ### Network organization datapoint (bus datapoint)
 The datapoint from network organization, this is a datapoint that has been scanned or declared in the fieldbus network organization, but which is not yet linked to any asset or spaces.
 
-```csharp
-  identifier = new
+```json
   {
-      type = "busdatapoint", // Indicates the datapoint is available in a network organization
-      networkId = "{{bacnetNetworkId}}", // Network to which belongs the bus datapoint
-      busDatapointId = "bus_datapoint_id_read_from_the_network_organization"
+      "type": "busdatapoint", // Indicates the datapoint is available in a network organization
+      "networkId": "{{bacnetNetworkId}}", // Network to which belongs the bus datapoint
+      "busDatapointId": "bus_datapoint_id_read_from_the_network_organization"
   }
 ```
 
@@ -68,7 +86,7 @@ This sample shows how to read a single datapoint instance value  from openBOS&re
 To read the value from a specific DataPoint use the route<br/>
 `POST : {{baseUrl}}/api/v1/ontology/datapointinstance/livedata/extended/read`
 
-As a parameter you give an array of datapoint identifiers
+As a parameter you give an array of datapoint identifiers to read
 
 Example for a datapoint identifier corresponding to a datapoint instance:
 ```csharp
@@ -76,11 +94,11 @@ Example for a datapoint identifier corresponding to a datapoint instance:
     readRequest.RequestFormat = DataFormat.Json;
     readRequest.OnBeforeDeserialization = resp => { resp.ContentType = "application/json; charset=utf-8"; };
     List<dynamic> read = new List<dynamic>
-    {
+    { // List of datapoint identifier to be read
         new
         {
-            datapointClientId = "client_unique_identifier", // id in the response
-            identifier: new {
+            datapointClientId = "client_unique_identifier", // Unique identifier by datapoint (will be find back in the response)
+            identifier= new {
               datapointInstanceId = "datapoint_unique_identifier", // The id of the datapoint instance in the database
               type = "datapointinstance" // Indicates the datapoint is entirely described by its protocol argument
             }
@@ -99,15 +117,15 @@ Example for a datapoint identifier corresponding to a protocol argument datapoin
     {
         new
         {
-          datapointClientId: "unique_identifier", // id of the response
+          datapointClientId: "unique_identifier", // Unique identifier by datapoint (will be find back in the response)
           identifier: new {
-            type: "protocolargumentsonly",
-            networkId: "{{bacnetNetworkId}}", // Database identifier of the network to read on
-            protocolArguments: new { // protocol arguments of the fieldbus datapoint
-              deviceid: 1,
-              objectinstance: 1,
-              objecttype: "analog-value",
-              propertyidentifier: "present-value"
+            type= "protocolargumentsonly",
+            networkId= "{{bacnetNetworkId}}", // Database identifier of the network to read on
+            protocolArguments= new { // protocol arguments of the fieldbus datapoint
+              deviceid= 1, // BACNet device instance
+              objectinstance= 1, // BACNet object instance
+              objecttype= "analog-value", // BACNet object Type
+              propertyidentifier= "present-value" // BACNet property Identifier
             }
           }
         }
@@ -125,11 +143,11 @@ Example for a datapoint identifier corresponding to network organization datapoi
     {
         new
         {
-          datapointClientId: "unique_identifier", // id of the response
+          datapointClientId= "unique_identifier", // id of the response
           identifier: new {
-            type: "busdatapoint",
-            networkId: "{{bacnetNetworkId}}", // Database identifier of the network to read on
-            busDatapointId: "{{busdatapointId}}" // Database identifier of the fieldbus datapoint in the network organization
+            type= "busdatapoint",
+            networkId= "{{bacnetNetworkId}}", // Database identifier of the network to read on
+            busDatapointId= "{{busdatapointId}}" // Database identifier of the fieldbus datapoint in the network organization
           }
         }
     };
@@ -164,7 +182,9 @@ A single item would look as follow:
   {
     "datapointClientId": "unique identifier of the datapoint",
     "value": "value to be written",
-    "identifier": {} // Datapoint identifier as explained previously
+    "identifier": {
+      // A datapoint identifier as explained previously
+    } 
   }
 ```
 
