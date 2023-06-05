@@ -7,16 +7,21 @@ baseUrl for local access : http://<ipaddress>
 baseUrl for cloud access : https://api.electrification.ability.abb/buildings/openbos/apiproxy/v1/gateway/<edgeid>
 ```
 
+## Postman link
+
+You can find other samples in the Postman collection
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/14996509-f2ab8b96-9c38-4825-ab6f-7022e954deda?action=collection%2Ffork&collection-url=entityId%3D14996509-f2ab8b96-9c38-4825-ab6f-7022e954deda%26entityType%3Dcollection%26workspaceId%3Dea90c3d1-21af-4177-8e72-f21b5ed12326)
+
 ## The different type of datapoint 
 
-When trying to read/write fieldbus value or trying to create alarm/trend/schedule on fieldbus value you will refer to the identification of datapoint.
+When trying to read/write fieldbus value or trying to create alarm/trend/schedule on fieldbus value you will refer to the identification of datapoint [DatapointIdentifierDTO](../60_references/30_schemas.md#schemadatapointidentifierdto).
 The datapoint identification can be :
-  - Datapoint instance from database
-  - Protocol argument based
-  - Network organization datapoint (bus datapoint)
+  - Datapoint instance from database [DatapointInstanceIdentifierDTO](../60_references/30_schemas.md#schemadatapointinstanceidentifierdto).
+  - Datapoint from network organization (aka: bus datapoint) [BusDatapointIdentifierDTO](../60_references/30_schemas.md#schemabusdatapointidentifierdto).
+  - Datapoint from expert raw protocol arguments [ProtocolArgumentsOnlyIdentifierDTO](../60_references/30_schemas.md#schemaprotocolargumentsonlyidentifierdto).
 
 ### Datapoint instance
-The datapoint instance, correspond to a datapoint attached to a space instance or asset instance. It is identified by its unique database identifier.
+The datapoint instance [DatapointInstanceIdentifierDTO](../60_references/30_schemas.md#schemadatapointinstanceidentifierdto), correspond to a datapoint attached to a space instance or asset instance. It is identified by its unique database identifier.
 
 ```json
   {
@@ -25,8 +30,18 @@ The datapoint instance, correspond to a datapoint attached to a space instance o
   }
 ```
 
-### Protocol argument based
-The datapoint from protocol arguments, this is a datapoint entirely described by the protocol arguments of what must be read on the fieldbus. The protocol arguments depend of the targetted fieldbus network .
+### Network organization datapoint (bus datapoint)
+The datapoint from network organization [BusDatapointIdentifierDTO](../60_references/30_schemas.md#schemabusdatapointidentifierdto), this is a datapoint that has been scanned or declared in the fieldbus network organization, but which is not yet linked to any asset or spaces.
+
+```json
+  {
+      "type": "busdatapoint", // Indicates the datapoint is available in a network organization
+      "networkId": "{{bacnetNetworkId}}", // Network to which belongs the bus datapoint
+      "busDatapointId": "bus_datapoint_id_read_from_the_network_organization"
+  }
+```
+### Datapoint from expert raw protocol arguments
+The datapoint from protocol arguments [ProtocolArgumentsOnlyIdentifierDTO](../60_references/30_schemas.md#schemaprotocolargumentsonlyidentifierdto), this is a datapoint entirely described by the protocol arguments of what must be read on the fieldbus. The protocol arguments depend of the targetted fieldbus network .
 
 ```json
   {
@@ -39,7 +54,7 @@ The datapoint from protocol arguments, this is a datapoint entirely described by
   }
 ```
 
-Protocol arguments for BACNet property are:
+Arguments for BACNet property are:
 ```json
   {
     "deviceid": 1,                // BACNet device instance
@@ -49,7 +64,7 @@ Protocol arguments for BACNet property are:
   }
 ```
 
-Protocol arguments for ModBus property are:
+Arguments for ModBus property are:
 ```json
 {
   "deviceaddress":"192.68.1.1", // ModBus IP address
@@ -68,25 +83,13 @@ Protocol arguments for ModBus property are:
 |inputRegister, holdingRegister| int16, int16rev, uint16, uint16rev, int32, int32sb, int32rev, int32revsb, uint32, uint32sb, uint32rev, uint32revsb, float32, float32sb, float32rev, float32revsb, float64, float64rev, string, stringrev, int64, int64rev, uint64, uint64rev|
 |
 
-
-### Network organization datapoint (bus datapoint)
-The datapoint from network organization, this is a datapoint that has been scanned or declared in the fieldbus network organization, but which is not yet linked to any asset or spaces.
-
-```json
-  {
-      "type": "busdatapoint", // Indicates the datapoint is available in a network organization
-      "networkId": "{{bacnetNetworkId}}", // Network to which belongs the bus datapoint
-      "busDatapointId": "bus_datapoint_id_read_from_the_network_organization"
-  }
-```
-
 ### How to read a DataPoint ?
 
-This sample shows how to read a single datapoint instance value  from openBOS&reg;.
+This sample shows how to read a single datapoint instance value from openBOS&reg;.
 To read the value from a specific DataPoint use the route<br/>
 `POST : {{baseUrl}}/api/v1/ontology/datapointinstance/livedata/extended/read`
 
-As a parameter you give an array of datapoint identifiers to read
+As a parameter you give an array of datapoint identifiers [DatapointIdentifierDTO[]](../60_references/30_schemas.md#schemadatapointidentifierdto) to read and as result an array of [DatapointInstanceValueDTO[]](../60_references/30_schemas.md#schemadatapointinstancevaluedto).
 
 Example for a datapoint identifier corresponding to a datapoint instance:
 ```csharp
@@ -105,10 +108,31 @@ Example for a datapoint identifier corresponding to a datapoint instance:
         }
     };
     readRequest.AddBody(read);
-    var readResponse = client.Execute<dynamic>(readRequest).Data;
+    var readResponse = client.Execute<JsonArray>(readRequest).Data;
 ```
 
-Example for a datapoint identifier corresponding to a protocol argument datapoint:
+Example for a datapoint identifier corresponding to network organization datapoint:
+```csharp
+    var readRequest = new RestRequest($"{baseUrl}/api/v1/ontology/datapointinstance/livedata/extended/read", Method.Post);
+    readRequest.RequestFormat = DataFormat.Json;
+    readRequest.OnBeforeDeserialization = resp => { resp.ContentType = "application/json; charset=utf-8"; };
+    List<dynamic> read = new List<dynamic>
+    {
+        new
+        {
+          datapointClientId= "unique_identifier", // id of the response
+          identifier: new {
+            type= "busdatapoint",
+            networkId= "{{bacnetNetworkId}}", // Database identifier of the network to read on
+            busDatapointId= "{{busdatapointId}}" // Database identifier of the fieldbus datapoint in the network organization
+          }
+        }
+    };
+    readRequest.AddBody(read);
+    var readResponse = client.Execute<JsonArray>(readRequest).Data;
+```
+
+Example for a datapoint identifier corresponding to expert raw protocol arguments:
 ```csharp
     var readRequest = new RestRequest($"{baseUrl}/api/v1/ontology/datapointinstance/livedata/extended/read", Method.Post);
     readRequest.RequestFormat = DataFormat.Json;
@@ -131,31 +155,10 @@ Example for a datapoint identifier corresponding to a protocol argument datapoin
         }
     };
     readRequest.AddBody(read);
-    var readResponse = client.Execute<dynamic>(readRequest).Data;
+    var readResponse = client.Execute<JsonArray>(readRequest).Data;
 ```
 
-Example for a datapoint identifier corresponding to network organization datapoint:
-```csharp
-    var readRequest = new RestRequest($"{baseUrl}/api/v1/ontology/datapointinstance/livedata/extended/read", Method.Post);
-    readRequest.RequestFormat = DataFormat.Json;
-    readRequest.OnBeforeDeserialization = resp => { resp.ContentType = "application/json; charset=utf-8"; };
-    List<dynamic> read = new List<dynamic>
-    {
-        new
-        {
-          datapointClientId= "unique_identifier", // id of the response
-          identifier: new {
-            type= "busdatapoint",
-            networkId= "{{bacnetNetworkId}}", // Database identifier of the network to read on
-            busDatapointId= "{{busdatapointId}}" // Database identifier of the fieldbus datapoint in the network organization
-          }
-        }
-    };
-    readRequest.AddBody(read);
-    var readResponse = client.Execute<dynamic>(readRequest).Data;
-```
-
-Result value will be an array of read result DatapointInstanceValueDTO[]
+Result value will be an array of read result [DatapointInstanceValueDTO[]](../60_references/30_schemas.md#schemadatapointinstancevaluedto)
 ```json
   [  
     {
@@ -172,10 +175,11 @@ Result value will be an array of read result DatapointInstanceValueDTO[]
 
 This sample will show how to write a value on a specific datapoint.
 
-A datapoint is uniquely identified by its unique id.
+A datapoint is uniquely identified by its identifier [DatapointIdentifierDTO](../60_references/30_schemas.md#schemadatapointidentifierdto).
+
 To write a value to a specific DataPoint use the route<br/>
 `POST : /api/v1/ontology/datapointinstance/livedata/extended/write`<br/>
-As a parameter you give an array of DatapointInstanceExtendedWriteDTO[] containing the value that will be written for each DataPoint.
+As a parameter you give an array of [DatapointInstanceExtendedWriteDTO[]](../60_references/30_schemas.md#schemadatapointinstanceextendedwritedto) containing the value that will be written for each DataPoint.
 
 A single item would look as follow:
 ```json
@@ -219,10 +223,10 @@ A single item would look as follow:
         }
     };
     writeRequest.AddBody(writeBody);
-    var writeResponse = client.Execute<dynamic>(writeRequest).Data; // result of type DatapointInstanceExtendedWriteResultDTO[]
+    var writeResponse = client.Execute<JsonArray>(writeRequest).Data; // result of type DatapointInstanceExtendedWriteResultDTO[]
 ```
 
-The result value will be an array of DatapointInstanceWriteResultDTO.
+The result value will be an array of [DatapointInstanceWriteResultDTO](../60_references/30_schemas.md#schemadatapointinstancewriteresultdto).
 ```json
 [
   {
@@ -236,7 +240,11 @@ The result value will be an array of DatapointInstanceWriteResultDTO.
 ## How do I subscribe to any datapoint value change?
 
 This sample explains how to create a subscription to be notified of value change on a specific datapoint.
-The sample uses SignalR technology.
+The sample uses SignalR technology refers to [.Net Core SignalR](https://learn.microsoft.com/fr-fr/aspnet/core/signalr/dotnet-client?view=aspnetcore-3.1&tabs=visual-studio) for more information.
+
+The sample, initialize a SignalR hub connection and attach a callback to it. It creates a live data subscription by `POST {baseUrl}/api/v1/ontology/datapointinstance/livedata/extended/subscribe` with [DatapointSubscriptionExtendedDTO](../60_references/30_schemas.md#schemadatapointsubscriptionextendeddto) and add datapoints using `POST {baseUrl}/api/v1/ontology/datapointinstance/livedata/extended/subscribe/{id}` with [DatapointSubscriptionCreateDTO](../60_references/30_schemas.md#schemadatapointsubscriptioncreatedto).
+The event format received in the call back are of type [DatapointInstanceValueDTO[]](../60_references/30_schemas.md#schemadatapointinstancevaluedto)
+
 
 ### Using local access on the Building edge
 
@@ -308,7 +316,8 @@ The sample uses SignalR technology.
 ```
 
 
-When using access from cloud:
+When using access from cloud, the difference resides on :
+ - The URL used to initiate the hub connection
 
 ```csharp
 

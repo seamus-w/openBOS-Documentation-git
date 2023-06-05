@@ -1,37 +1,27 @@
 # Connection and authentication
 
 To access the openBOS&reg; API, there are two ways:
+-	Via the cloud using oBaas.
 -	Via the local network (e.g. http\:\/\/192\.168\.1\.123) 
--	Via the cloud using the openBOS&reg; Cloud API.
 
 ## How to authenticate to the openBOS&reg; API
-
-### Accessing openBOS&reg; from local network
-For the local workflow, which means, you access the openBOS&reg; directly on the Building edge 
-that is on your local network (that is, http\:\/\/192\.168\.x\.y), 
-you will use a standard  JSON Web Token (JWT) workflow.
- - Collect your login/password (either the account you have created on the Building edge yourself or the login/password the Building edge owner passes on to you)
- - Authenticate on the API endpoint `[POST] {{baseUrl}}/api/v1/ontology/authentication`
-   - Store the resulting access_token retrieved
-
-```json
-    {
-      "access_token": **"XXXXX"**, 
-    }
-```
- - The access token will have to be appended to every underlying call to the openBOS&reg; API by providing the token in the Authorization header  in this format:
-  "Authorization" : "Bearer YOUR_ACCESS_TOKEN"
-
-In this workflow, all the calls included in the samples will be done using {{baseUrl}}=http://\<IP_ADDRESS\>.
 
 ### Accessing Building edge openBOS&reg; via ABB Cloud
 In a cloud perspective workflow, you will already have registered as a developer on the ABB Developer Portal (<a href="https://developers.connect.abb.com/" target="_blank">https://developers.connect.abb.com/). From there you will already have created your application.
 
-The application you have created gives you all the information needed to authenticate via cloud.
+Available authentication workflow are:
+ - OAuth 2.0 Grant type Authorization code
+ - OAuth 2.0 Grant type with PKCE Authorization code
+ - OAuth 2.0 Grant type ClientId/Client secret
+
+NOTE: 
+To be able to use OAuth 2.0 Grant type ClientId/Client secret it is required that you first [contact us](mailto:it.el.electrification.digital@abb.com) to request a partnership enrollment that would lead in creating a new Trusted application on ABB side.
 
 #### Building edge openBOS&reg; via OAuth 2.0 Grant type Authorization code
 
-The Authentication workflow that will be used is OAuth2.0 with Grant type Authorization code.
+In this workflow, the application you have created in the [How to connect to a Building edge?](/content/20_prerequisites/20_howToStart.md) will already have all the information needed to authenticate via cloud.
+
+**NOTE : This authentication will be done On behalf of a user. As aconsequence the authentication will always trigger a web dialog for the user to be able to logged in by entering his username/password.**
 
 <u>Parameters used for OAuth 2.0:</u>
 
@@ -70,8 +60,6 @@ The following table lists scopes which are supported by the Building Ecosystem p
 | api://openbos/Relation.Read | Allows the app to read relations with Building edge devices  |
 | api://openbos/Relation.ReadWrite | Allows the app to read and delete relations with Building edge devices |
 | api://openbos/BosApi.Proxy | Allows the app to remotely access the Building edge device |
-| api://openbos/License.Read | Allows the caller to retrieve licensing information |
-| api://openbos/License.ReadWrite | Allows the caller to read and alter licensing information |
 | api://openbos/User.Delete | Allows the app to delete a user account |
 | offline_access | Scope for requesting a refresh token which can be used to periodically request a fresh access-token to keep the user signed in. |
 | openid | By using this permission, an app can receive a unique identifier for the user in the form of the subclaim. The permission also gives the app access to the UserInfo endpoint. The openid scope can be used at the Microsoft&reg; identity platform token endpoint to acquire ID tokens. The app can use these tokens for authentication. |
@@ -91,3 +79,21 @@ The refresh-token will have to be used in requests to the TokenUrl route in orde
 Please note the following:
  - access-token is valid for 3600 seconds
  - refresh-token is valid for 90 days
+
+### Accessing openBOS&reg; from local network
+For the local workflow, which means, you access the openBOS&reg; directly on the Building edge 
+that is on your local network (that is, http\:\/\/192\.168\.x\.y), 
+you will use a standard  JSON Web Token (JWT) workflow.
+ - Collect your login/password (either the account you have created on the Building edge yourself or the login/password the Building edge owner passes on to you)
+ - Authenticate on the API endpoint `[POST] {{baseUrl}}/api/v1/ontology/authentication`
+   - Store the resulting access_token retrieved
+
+```json
+    {
+      "access_token": **"XXXXX"**, 
+    }
+```
+ - The access token will have to be appended to every underlying call to the openBOS&reg; API by providing the token in the Authorization header  in this format:
+  "Authorization" : "Bearer YOUR_ACCESS_TOKEN"
+
+In this workflow, all the calls included in the samples will be done using {{baseUrl}}=http://\<IP_ADDRESS\>.

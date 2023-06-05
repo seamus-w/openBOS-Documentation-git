@@ -14,10 +14,7 @@ You can find other samples in the Postman collection
 
 ## How to get information on the property?
 
-This sample shows how to read information from the property defined in the project.
-The resource path to be used to get property information is:
-`GET {{baseUrl}}/api/v1/ontology/property**` <br/>
-It returns the detailed information of the property (PropertyDTO).
+The sample reads the information from the property by calling `GET /api/v1/ontology/property` with a result of type [`PropertyDTO`](../60_references/30_schemas.md#schemapropertydto).
 
 ```csharp
     // Set Authentication token
@@ -56,11 +53,7 @@ Truncated result of the detailed property information PropertyDTO:
 
 ### How to get buildings available in a property?
 
-This sample shows how to get the list of buildings that are part of the property in the project and display their names.
-
-List of buildings can be found, via reading first the detailled information from a property:<br/>
-`GET : {{baseUrl}}/api/v1/ontology/property` <br/>
-It returns the detailed information of the property. From that result use the field "buildings" (looks like: api/v1/ontology/zone/children/[PROPERTY_ID]?childrenType=Building) and make a subsequent call to this URL in order to get the list of building attached to the property.
+The sample reads the property detail as [`PropertyDTO`](../60_references/30_schemas.md#schemapropertydto) by calling `GET /api/v1/ontology/property`. Then reads the URI  for getting list of buildings from [`PropertyDTO`](../60_references/30_schemas.md#schemapropertydto).buildings which retrieves ([`ZoneInstanceInfoDTO[]`](../60_references/30_schemas.md#schemazoneinstanceinfodto)).
 
 ```csharp
     // Set Authentication token
@@ -78,11 +71,18 @@ It returns the detailed information of the property. From that result use the fi
     }
 ```
 
-### How to get how many structures, fa&ccedil;ades, roofs are there in my building?
+### How to get how many structures, facades, roofs are there in my building?
 
-This sample shows for each building how to get the number of items for different type of structures (fa&ccedil;ade, floor, roof) available in the building.
+The sample shows for each building how to get the number of items for different type of structures (facade, floor, roof) available in the building.
 
-Using  API endpoints of the ontology, the concept is to request all structures that are under the building and filter on tags for the correct structure type "fa&ccedil;ade", "floor", "roof".<br/>
+The sample reads a building detail ([`BuildingDTO`](../60_references/30_schemas.md#schemabuildingdto)) using `GET /api/v1/ontology/building/{mybuildingid}`, generates a call to get structures by using URI stored in [`BuildingDTO`](../60_references/30_schemas.md#schemabuildingdto).structures that gives a list of type ([`ZoneInstanceInfoDTO[]`](../60_references/30_schemas.md#schemazoneinstanceinfodto)).
+
+We then count on this list of structures theone that matches facade, floor or roof:
+  - Number of facade : items having tag `bos:structure:facade`
+  - Number of floors : items having tag `bos:structure:floor`
+  - Number of roofs : items having tag `bos:structure:roof`
+
+Using  API endpoints of the ontology, the concept is to request all structures that are under the building and filter on tags for the correct structure type "facade", "floor", "roof".<br/>
 *Note:* A list of available tags for the structure is given in the chapter "References".
 
 ```csharp
@@ -105,10 +105,17 @@ Using  API endpoints of the ontology, the concept is to request all structures t
     }
 ```
 
-Using the core routes, the concept is to query the buildings by finding all zones which have the "building" tag.
+### How to get how many structures, facades, roofs are there in my building using only zone concept ?
+
+Using the core zone concept routes, the concept is to query the buildings by finding all zones which have the "building" tag.
 Then, for each building, query the structures with correct tags that are "underzone" the zone building.
 It uses the parameter "filter" with syntax:
   filter=underzone "zoneid" and tags contains "searchedtag"
+
+The sample reads list of zone ([`ZoneInstanceInfoDTO[]`](../60_references/30_schemas.md#schemazoneinstanceinfodto)) having a `bos:building` tag using `GET /api/v1/ontology/zone?filter=(filter)`. For each building, query the zones ([`ZoneInstanceInfoDTO[]`](../60_references/30_schemas.md#schemazoneinstanceinfodto)) that are "under" that building and contains the correct tag using `GET /api/v1/ontology/zone?filter=underzone "buildingid" and Tags contains "my tag"`:
+  - for facade : items having tag `bos:structure:facade`
+  - for floors : items having tag `bos:structure:floor`
+  - for roofs : items having tag `bos:structure:roof`
 
 ```csharp
     // Set Authentication token
@@ -131,13 +138,11 @@ It uses the parameter "filter" with syntax:
 
 ### How do I get the floors and their spaces?
 
-This sample reads the floors of the project and collects the list of spaces of a floor.
-The sample starts with a well-known buildingid that represents the unique identifier of the building you want to explore.
+The sample starts with a well-known mybuildingid and reads the floors then for each their spaces.
 
-Using API endpoints of the ontology, the concept is to request the list of structures that are under a building using the sub api path present in the BuildingDTO object.
-Then query for the structure type "fa&ccedil;ade", "floor", "roof".
+The sample reads building detail of type ([`BuildingDTO`](../60_references/30_schemas.md#schemabuildingdto)) using `GET /api/v1/ontology/building/{mybuildingid}`, makes the next call to have the list of structures ([`ZoneInstanceInfoDTO[]`](../60_references/30_schemas.md#schemazoneinstanceinfodto)) under the building using URI available at [`BuildingDTO`](../60_references/30_schemas.md#schemabuildingdto).structures .
 
-*Note:* A list of available tags is given in the chapter "References".
+From the list of structures it takes only the floors by filtering on tag `bos:structure:floor` and for each floor ([`StructureDTO`](../60_references/30_schemas.md#schemastructuredto)) reads its detail using `GET /api/v1/ontology/structure/{id}`.
 
 ```csharp
     // Set Authentication token
@@ -162,7 +167,14 @@ Then query for the structure type "fa&ccedil;ade", "floor", "roof".
     }
 ```
 
-Using the core routes the concept is to get all floors below a specific building and search for zones with tags ""bos:space" that are below each floor.
+### How do I get the floors and their spaces using zone concept ?
+Using the core routes the concept is to get all floors below a specific building and search for zones with tags "bos:space" that are below each floor.
+
+The sample starts with a well-known mybuildingid and reads the floors then for each their spaces.
+
+The sample reads building detail using `GET /api/v1/ontology/zone/{mybuildingid}` that retrieves [`BuildingDTO`](../60_references/30_schemas.md#schemabuildingdto), makes the next call to have the list of structures ([`ZoneInstanceInfoDTO[]`](../60_references/30_schemas.md#schemazoneinstanceinfodto)) under the building using `GET /api/v1/ontology/zone?filter=underzone "mybuildingid" and Tags contains "bos:structure:floor"`.
+From the floors the sample gets the children spaces using `GET /api/v1/ontology/zone?filter=underzone "myfloorid" and Tags contains "bos:space"`.
+
 ```csharp
     // Set Authentication token
     var client = new RestSharp.RestClient();
@@ -183,7 +195,8 @@ Using the core routes the concept is to get all floors below a specific building
 ### How do I read the complete hierarchy of my building in one call?
 
 This sample shows how to get the list of zones that are available in the property in a single call and generates a memory tree out of it.
-The first call will collect all the zones that are present in the project /api/v1/core/zone/hierarchy.
+
+The first call will collect all the zones that are present in the project `GET /api/v1/core/zone/hierarchy` with result of type ([ZoneInstanceHierarchyDTO[]](../60_references/30_schemas.md#schemazoneinstancehierarchydto)).
 
 The BuildTree method will create a tree structure with:
 
@@ -223,7 +236,15 @@ The BuildTree method will create a tree structure with:
 
 ### How do I get the graphical representation of a floor?
 
-This sample reads the graphical representation (mapview) of a floor with its space children and functional blocks.
+This sample reads the graphical representation (mapview graphics) of a floor with its space children and functional blocks.
+The sample gets the detail of a mapview by calling `GET /api/v1/ontology/mapview?zoneId=<zoneId>` which returns ([MapViewDTO[]](../60_references/30_schemas.md#schemamapviewdto)) of a specific zone identifier `mygroundid`.
+
+Then it reads the graphical representation of it using `GET {baseUrl}/api/v1/ontology/mapview/{mapView[0]["id"]}/graphics` which returns [MapViewElementBaseDTO[]](../60_references/30_schemas.md#schemamapviewelementbasedto) where each item can be [MapViewElementFBDTO[]](../60_references/30_schemas.md#schemamapviewelementfbdto) or [MapViewElementZoneDTO[]](../60_references/30_schemas.md#schemamapviewelementzonedto) or [MapViewElementTextDTO[]](../60_references/30_schemas.md#schemamapviewelementtextdto) or [MapViewElementImageDTO[]](../60_references/30_schemas.md#schemamapviewelementimagedto).
+
+Coordinates system:
+ - the coordinates of the mapview are expressed in an orthonormal basis with fractional coordinates { x: [0,1], y: [0,1] }
+ - the origin (0;0) is at left top 
+ - the value 1 is bound to the larger extend (width or height). For example, for a landscape map with aspect ratio 4:3, on y, the bottom boundary will be 3/4.
 
 ```csharp
     // Set Authentication token

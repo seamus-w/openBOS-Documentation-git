@@ -13,15 +13,15 @@ You can find other samples in the Postman collection
 
 ## How to display property users? 
 
-This example collects the users that are configured as "owner" in the project.
-For each owner the sample displays the list of AccessRights the user is allowed and the list of roles to which the user is related to.
+This example collects the users configured as "owner" in the project by using `GET /api/v1/ontology/user?type=Owner`. It retrieves [`UserInfoDTO[]`](../60_references/30_schemas.md#schemauserinfodto), for each owner the sample gets the detail [`UserDTO`](../60_references/30_schemas.md#schemauserdto) by using `GET /api/v1/ontology/user/{id}` and displays the list of [`AccessRightDTO`](../60_references/30_schemas.md#schemaaccessrigth)s granted to the user.
+Finally the sample displays the roles ([`RoleDTO`](../60_references/30_schemas.md#schemaroledto)) that is linked to the user by performing recursive calls to `GET /api/v1/ontology/role/{id}` following hierarchy of roles.
 
 ```csharp
     // Set Authentication token
     var client = new RestSharp.RestClient();
     client.AddDefaultHeader("Authorization", $"Bearer {bearerToken}");
 
-    // Collect users with role owner (UserInfoDTO[])
+    // Collect users with role owner 
     dynamic owners = client.Execute<JsonArray>(new RestRequest($"{baseUrl}/api/v1/ontology/user?type=Owner")).Data;
 
     // Display the rights of the first owner user (UserDTO)
