@@ -12,4 +12,4 @@ Important rules to understand :
 - A ZONE is a collection of ASSETs and independent from the DEVICES
 - Each DEVICE manages a collection of ASSETS. Either a single or multiple.
 
-![Basic objects](assets/openbos-documentation/static/images/basic-objects.png)
+![Basic objects](../../assets/openbos-documentation/static/images/basic-objects.png)

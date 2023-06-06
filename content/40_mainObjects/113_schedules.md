@@ -14,4 +14,4 @@ If you apply a schedule on a floor (parent zone) then it will apply to all the s
 
 ## Scheduler
 
-![Scheduler](assets/openbos-documentation/static/images/diagram_scheduler.png "Scheduler")
+![Scheduler](../../assets/openbos-documentation/static/images/diagram_scheduler.png "Scheduler")

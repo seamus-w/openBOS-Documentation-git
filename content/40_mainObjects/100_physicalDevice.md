@@ -8,5 +8,5 @@ Here again all is template based and a device template is created. All the ident
 
 ## DEVICE and PHYSICAL DEVICE
 
-![Physical devices](assets/openbos-documentation/static/images/diagram_device.png "Physical devices")
+![Physical devices](../../assets/openbos-documentation/static/images/diagram_device.png "Physical devices")
 

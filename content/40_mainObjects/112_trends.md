@@ -8,4 +8,4 @@ Trends are stored in database on the edge.
 
 ## Trends
 
-![Trends](assets/openbos-documentation/static/images/diagram_trends.png "Trends")
+![Trends](../../assets/openbos-documentation/static/images/diagram_trends.png "Trends")

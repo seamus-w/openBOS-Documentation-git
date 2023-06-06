@@ -16,7 +16,7 @@ All datapoints may come from a template.
 
 ## Ontology Mapping
 
-![Data Points](assets/openbos-documentation/static/images/diagram_datapoints.png "Data Points")
+![Data Points](../../assets/openbos-documentation/static/images/diagram_datapoints.png "Data Points")
 
 
 ## Tags

@@ -10,7 +10,7 @@ Then there are several possible routes: either browse the structure and find the
 
 ## Ontology mapping
 
-![Building Assets](assets/openbos-documentation/static/images/diagram_asset.png "Building Assets")
+![Building Assets](../../assets/openbos-documentation/static/images/diagram_asset.png "Building Assets")
 
 ## Predefined tags
 

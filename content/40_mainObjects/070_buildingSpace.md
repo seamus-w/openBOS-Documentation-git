@@ -18,7 +18,7 @@ All element describing the property (Building, Structure, Space, Area) is a Zone
 
 ## Ontology mapping
 
-![Building Space](assets/openbos-documentation/static/images/diagram_building.png "Building Space")
+![Building Space](../../assets/openbos-documentation/static/images/diagram_building.png "Building Space")
 
 ## Predefined tags
 

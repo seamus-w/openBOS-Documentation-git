@@ -8,4 +8,4 @@ The alarm can be sent in an event-driven manner using SignalR or Webhook.
 
 ## Alarms
 
-![Alarms](assets/openbos-documentation/static/images/diagram_alarms.png "Alarms")
+![Alarms](../../assets/openbos-documentation/static/images/diagram_alarms.png "Alarms")

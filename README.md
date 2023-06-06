@@ -62,7 +62,7 @@ These steps have to be performed before starting to use the openBOS&reg; APIs:
 
 Visit <a href="https://buildings.ability.abb/portfolio" target="_blank">https://buildings.ability.abb/portfolio</a> by logging into the page via your myABB account.
 
-<img src="assets/openbos-documentation/static/images/startDeviceMap.png" height="463" width="815"/>
+<img src="../../assets/openbos-documentation/static/images/startDeviceMap.png" height="463" width="815"/>
 
 Here you find your openBOS&reg; Building edge / gateway and you may configure and manage it.
 
@@ -72,17 +72,17 @@ Log into the ABB Developer Portal with your myABB credentials
 
 - Click on Applications and press Create Application
 
-<img src="assets/openbos-documentation/static/images/startLogin.png" height="362" width="620"/>
+<img src="../../assets/openbos-documentation/static/images/startLogin.png" height="362" width="620"/>
 
 - Enter the necessary data for your application and your preferred redirect URLs
   - Be sure that you select the option "Building Management"
   - Press Create Application
 
-<img src="assets/openbos-documentation/static/images/startApplicationDetails.png" height="400" width="575"/>
+<img src="../../assets/openbos-documentation/static/images/startApplicationDetails.png" height="400" width="575"/>
 
  - After the application has been successfully created, you can find your required data to access the API for the first time
 
-<img src="assets/openbos-documentation/static/images/startAccessAPI.png" height="417" width="714"/>
+<img src="../../assets/openbos-documentation/static/images/startAccessAPI.png" height="417" width="714"/>
 
  - You can try out our API right away inside our ABB Developer Portal in section “API reference”
    - Click on “Building Management“ tag at the bottom of the left side
@@ -90,7 +90,7 @@ Log into the ABB Developer Portal with your myABB credentials
    - Set the edge identifier to communicate with.(NOTE : Use `demonstrationEdge1` to Try Out against the demonstration edge)
    - Click “Try out”
 
-<img src="assets/openbos-documentation/static/images/startTryOut.png" height="600" width="800"/>
+<img src="../../assets/openbos-documentation/static/images/startTryOut.png" height="600" width="800"/>
 
 Start using your first calls to get data from openBOS&reg;.
 
@@ -101,7 +101,7 @@ One configured to target a local edge and one configured to target an edge throu
 
 ## Local environment
 
- <a href="assets/openbos-documentation/static/images/openBOS Ontology Local Api.postman_collection.json" target="_blank">Download openBOS Postman API collection for local</a>
+ <a href="../../assets/openbos-documentation/static/images/openBOS Ontology Local Api.postman_collection.json" target="_blank">Download openBOS Postman API collection for local</a>
 
  - Open Postman and import the collection
  - Select the imported collection
@@ -116,7 +116,7 @@ One configured to target a local edge and one configured to target an edge throu
 
 ## Cloud environment
 
- <a href="assets/openbos-documentation/static/images/openBOS Ontology Cloud Api.postman_collection.json" target="_blank">Download openBOS Postman API collection for cloud</a>
+ <a href="../../assets/openbos-documentation/static/images/openBOS Ontology Cloud Api.postman_collection.json" target="_blank">Download openBOS Postman API collection for cloud</a>
 
  - Retrieve the gwid of your edge from the cloud portal
    - Connect to <a href="https://buildings.ability.abb/portfolio" target="_blank">https://buildings.ability.abb/portfolio</a>
