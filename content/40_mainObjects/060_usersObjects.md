@@ -12,7 +12,7 @@ LOCALIZATION: each user is localized and depending on the zone, HMI will change 
 
 ## Ontology mapping
 
-![User Management](assets/openbos-documentation/static/images/diagram_users.png)
+![User Management](../../assets/openbos-documentation/static/images/diagram_users.png)
 
 ## Tags families
 Main user tag families are:
